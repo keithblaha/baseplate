@@ -167,6 +167,24 @@ def Base64(text):
         raise ValueError(*exc.args)
 
 
+def File(mode="r"):
+    """A path to a file.
+
+    This takes a path to a file and returns an open file object, like
+    returned by :py:func:`open`.
+
+    :param str mode: an optional string that specifies the mode in
+        which the file is opened.
+
+    """
+    def open_file(text):
+        try:
+            return open(text, mode=mode)
+        except IOError:
+            raise ValueError("could not open file: %s" % text)
+    return open_file
+
+
 def Timespan(text):
     """A span of time.
 
