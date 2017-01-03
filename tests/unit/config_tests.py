@@ -118,6 +118,10 @@ class FileTests(unittest.TestCase):
         file_opener = config.File(mode="w")
         the_file = file_opener(self.tempfile.name)
         the_file.write("cool")
+        the_file.close()
+
+        with open(self.tempfile.name) as f:
+            self.assertEqual(f.read(), "cool")
 
 
 class TimespanTests(unittest.TestCase):
