@@ -14,18 +14,19 @@ from .. import mock
 class WeightedChoiceTests(unittest.TestCase):
     def test_empty_list(self):
         with self.assertRaises(ValueError):
-            random.weighted_choice([], lambda i: i)
+            random.WeightedLottery([], lambda i: i)
 
     def test_negative_weight(self):
         with self.assertRaises(ValueError):
-            random.weighted_choice(["a"], lambda i: -1)
+            random.WeightedLottery(["a"], lambda i: -1)
 
     @mock.patch("random.random")
     def test_iterator(self, random_random):
         iterator = (n for n in range(10))
 
         random_random.return_value = 0.0
-        choice = random.weighted_choice(iterator, lambda i: i)
+        lottery = random.WeightedLottery(iterator, lambda i: i)
+        choice = lottery.pick()
         self.assertEqual(choice, 1)
 
     @mock.patch("random.random")
@@ -39,7 +40,8 @@ class WeightedChoiceTests(unittest.TestCase):
         ]
 
         random_random.return_value = 0.5
-        choice = random.weighted_choice(items, weight_fn)
+        lottery = random.WeightedLottery(items, weight_fn)
+        choice = lottery.pick()
         self.assertEqual(choice, "c")
 
     def test_distribution(self):
@@ -50,10 +52,11 @@ class WeightedChoiceTests(unittest.TestCase):
             "c", # 3
             "d", # 4
         ]
+        lottery = random.WeightedLottery(items, weight_fn)
 
         choices = collections.Counter()
         for _ in range(10000):
-            choice = random.weighted_choice(items, weight_fn)
+            choice = lottery.pick()
             choices[choice] += 1
 
         # we give a bit of fuzz factor here since we're
