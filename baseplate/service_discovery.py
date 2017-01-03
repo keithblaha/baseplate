@@ -28,7 +28,7 @@ import logging
 import os
 
 from .config import Endpoint
-from .random import weighted_choice
+from .random import WeightedLottery
 
 
 Backend_ = collections.namedtuple("Backend", "id name endpoint weight")
@@ -79,6 +79,7 @@ class ServiceInventory(object):
         self.filename = filename
         self.mtime = None
         self.backends = []
+        self.lottery = None
 
     def _load_backends(self):
         logging.debug("Loading backends from %s", self.filename)
@@ -86,6 +87,8 @@ class ServiceInventory(object):
         try:
             with open(self.filename) as f:
                 self.backends = [_backend_from_json(d) for d in json.load(f)]
+                self.lottery = WeightedLottery(
+                    self.backends, weight_key=lambda b: b.weight)
                 self.mtime = os.fstat(f.fileno()).st_mtime
         except IOError as exc:
             logging.debug("Failed to read service inventory: %s", exc)
@@ -129,7 +132,10 @@ class ServiceInventory(object):
             has no available endpoints.
 
         """
+
+        # refresh as necessary
         backends = self.get_backends()
         if not backends:
             raise NoBackendsAvailableError
-        return weighted_choice(backends, lambda b: b.weight)
+
+        return self.lottery.pick()
